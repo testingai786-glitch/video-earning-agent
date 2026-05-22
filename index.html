@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <title>🎬 Video Earning Agent</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Bebas+Neue&display=swap" rel="stylesheet">
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --bg:#080c12;--surface:#0d1421;--border:rgba(56,189,248,0.15);
+      --cyan:#38bdf8;--purple:#a78bfa;--green:#34d399;--red:#f87171;
+      --yellow:#fbbf24;--text:#e2e8f0;--muted:#475569;--dim:#1e2d40;
+    }
+    html,body{background:var(--bg);color:var(--text);font-family:'Space Mono',monospace;min-height:100vh;overflow-x:hidden}
+    body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 60% 40% at 20% 10%,rgba(56,189,248,0.06) 0%,transparent 60%),radial-gradient(ellipse 40% 30% at 80% 80%,rgba(167,139,250,0.05) 0%,transparent 60%);pointer-events:none;z-index:0}
+    .wrap{max-width:480px;margin:0 auto;padding:14px;position:relative;z-index:1}
+
+    /* HEADER */
+    .hdr{text-align:center;padding:18px 0 14px;border-bottom:1px solid var(--border);margin-bottom:14px}
+    .hdr .badge{font-size:9px;letter-spacing:4px;color:var(--cyan);text-transform:uppercase;margin-bottom:5px}
+    .hdr h1{font-family:'Bebas Neue',sans-serif;font-size:34px;letter-spacing:3px;background:linear-gradient(90deg,var(--cyan),var(--purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent;line-height:1}
+    .hdr p{font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:3px}
+
+    /* CARD */
+    .card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:10px}
+    .clabel{font-size:9px;letter-spacing:3px;color:var(--cyan);text-transform:uppercase;margin-bottom:10px}
+
+    /* AGENT FACE */
+    .face{display:flex;align-items:center;gap:12px}
+    .emoji{width:60px;height:60px;background:rgba(56,189,248,0.08);border:1px solid var(--border);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:34px;flex-shrink:0;transition:all 0.3s}
+    .ainfo{flex:1;min-width:0}
+    .astatus{font-size:13px;font-weight:700;color:var(--text)}
+    .astatus.g{color:var(--green)} .astatus.r{color:var(--red)}
+    .athought{font-size:10px;color:var(--muted);margin-top:3px;font-style:italic;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+
+    /* STATS */
+    .stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin-top:10px}
+    .sbox{background:rgba(0,0,0,0.3);border:1px solid var(--dim);border-radius:10px;padding:9px 6px;text-align:center}
+    .sbox.e{border-color:rgba(52,211,153,0.3)}
+    .sval{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:1px;color:var(--text)}
+    .sval.g{color:var(--green)} .sval.r{color:var(--red)}
+    .slbl{font-size:8px;letter-spacing:2px;color:var(--muted);margin-top:1px}
+
+    /* PROGRESS */
+    .prog{margin-top:10px}
+    .pmeta{display:flex;justify-content:space-between;font-size:9px;color:var(--muted);margin-bottom:4px}
+    .ptrack{background:rgba(255,255,255,0.05);border-radius:99px;height:5px;overflow:hidden}
+    .pfill{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--cyan),var(--purple));transition:width 0.5s ease}
+    .pfill.done{background:linear-gradient(90deg,var(--green),#6ee7b7)}
+
+    /* YT */
+    .yt-row{display:flex;gap:8px}
+    .yt-in{flex:1;background:rgba(0,0,0,0.4);border:1px solid var(--dim);border-radius:10px;padding:10px 11px;color:var(--text);font-family:'Space Mono',monospace;font-size:11px;outline:none;transition:border-color 0.2s;min-width:0}
+    .yt-in:focus{border-color:var(--cyan)}
+    .yt-in::placeholder{color:var(--muted);font-size:10px}
+    .yt-btn{background:rgba(56,189,248,0.1);border:1px solid rgba(56,189,248,0.3);border-radius:10px;color:var(--cyan);font-family:'Space Mono',monospace;font-size:10px;padding:10px 12px;cursor:pointer;white-space:nowrap;font-weight:700;letter-spacing:1px;transition:all 0.2s;flex-shrink:0}
+    .yt-btn:hover{background:rgba(56,189,248,0.2)}
+    .yt-btn:disabled{opacity:0.4;cursor:not-allowed}
+    .yt-result{display:none;margin-top:8px;background:rgba(52,211,153,0.06);border:1px solid rgba(52,211,153,0.2);border-radius:10px;padding:10px;font-size:10px;color:var(--green);line-height:1.6;white-space:pre-wrap}
+    .yt-result.show{display:block}
+
+    /* PIPELINE */
+    .pipe{display:flex;flex-direction:column;gap:5px}
+    .pstep{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:9px;border:1px solid transparent;transition:all 0.3s}
+    .pstep.cur{background:rgba(56,189,248,0.07);border-color:rgba(56,189,248,0.25)}
+    .picon{font-size:17px;flex-shrink:0}
+    .plbl{flex:1;font-size:11px;color:var(--muted)}
+    .plbl.act{color:var(--cyan);font-weight:700}
+    .plbl.dn{color:var(--green)}
+    .pdot{width:6px;height:6px;border-radius:50%;background:var(--cyan);animation:blink 1s infinite;flex-shrink:0}
+    .ptick{font-size:11px;color:var(--green);flex-shrink:0}
+
+    /* LOG */
+    .logbox{background:rgba(0,0,0,0.4);border-radius:10px;padding:10px;height:190px;overflow-y:auto;display:flex;flex-direction:column;gap:3px}
+    .lempty{color:var(--dim);font-size:11px;text-align:center;margin:auto}
+    .lline{font-size:10px;line-height:1.5;display:flex;gap:6px}
+    .ltime{color:var(--dim);flex-shrink:0}
+    .lmsg{word-break:break-word}
+    .lmsg.phase{color:var(--yellow)} .lmsg.success{color:var(--green)}
+    .lmsg.error{color:var(--red)} .lmsg.agent{color:var(--purple)}
+    .lmsg.work{color:var(--cyan)} .lmsg.payment{color:var(--yellow);font-weight:700}
+    .lmsg.info{color:#64748b}
+
+    /* API KEY */
+    .api-tog{background:none;border:1px solid var(--dim);border-radius:8px;color:var(--muted);font-family:'Space Mono',monospace;font-size:9px;padding:6px 12px;cursor:pointer;letter-spacing:2px;margin-bottom:8px}
+    .api-in{width:100%;background:rgba(0,0,0,0.4);border:1px solid var(--dim);border-radius:10px;padding:10px 12px;color:var(--text);font-family:'Space Mono',monospace;font-size:11px;outline:none;display:none;margin-bottom:8px}
+    .api-in.show{display:block}
+    .api-in:focus{border-color:var(--purple)}
+
+    /* START BTN */
+    .startbtn{width:100%;padding:15px;border:none;border-radius:12px;background:linear-gradient(135deg,var(--cyan),var(--purple));color:#fff;font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:4px;cursor:pointer;transition:all 0.3s;position:relative;overflow:hidden}
+    .startbtn:disabled{background:var(--dim);color:var(--muted);cursor:not-allowed}
+    .startbtn:not(:disabled):active{transform:scale(0.98)}
+
+    /* ALERTS */
+    .a-paid,.a-shut{border-radius:12px;padding:14px;text-align:center;display:none;margin-top:10px}
+    .a-paid{background:rgba(52,211,153,0.08);border:1px solid rgba(52,211,153,0.3)}
+    .a-paid.show,.a-shut.show{display:block}
+    .a-shut{background:rgba(248,113,113,0.08);border:1px solid rgba(248,113,113,0.3);animation:pborder 1s infinite}
+    .abig{font-size:26px;margin-bottom:5px}
+    .atitle{font-size:13px;font-weight:700}
+    .a-paid .atitle{color:var(--green)} .a-shut .atitle{color:var(--red)}
+    .asub{font-size:10px;color:var(--muted);margin-top:3px}
+
+    /* ERROR TOAST */
+    .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#1e1e2e;border:1px solid var(--red);color:var(--red);padding:10px 18px;border-radius:10px;font-size:11px;z-index:999;display:none;max-width:300px;text-align:center}
+    .toast.show{display:block}
+
+    ::-webkit-scrollbar{width:3px} ::-webkit-scrollbar-track{background:transparent} ::-webkit-scrollbar-thumb{background:var(--dim);border-radius:99px}
+    @keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+    @keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+    @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-3px)}75%{transform:translateX(3px)}}
+    @keyframes pborder{0%,100%{border-color:rgba(248,113,113,0.3)}50%{border-color:rgba(248,113,113,0.8)}}
+    .ab{animation:bounce 0.8s infinite} .as{animation:shake 0.3s infinite}
+  </style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="hdr">
+    <div class="badge">Autonomous Earning Agent v3.0</div>
+    <h1>🎬 Video Editor AI</h1>
+    <p>Seekhega · Dhundhega · Kamayega</p>
+  </div>
+
+  <!-- STATUS -->
+  <div class="card">
+    <div class="clabel">Agent Status</div>
+    <div class="face">
+      <div class="emoji" id="emo">🤔</div>
+      <div class="ainfo">
+        <div class="astatus" id="st">Taiyaar — Start karo!</div>
+        <div class="athought" id="th">Mujhe start karo... main taiyaar hoon!</div>
+      </div>
+    </div>
+    <div class="stats">
+      <div class="sbox e"><div class="sval g" id="earn">$0</div><div class="slbl">EARNED</div></div>
+      <div class="sbox"><div class="sval" id="cname">—</div><div class="slbl">CLIENT</div></div>
+      <div class="sbox"><div class="sval g" id="heart">💚</div><div class="slbl">VITALS</div></div>
+    </div>
+    <div class="prog">
+      <div class="pmeta"><span>PROGRESS</span><span id="ppct">0%</span></div>
+      <div class="ptrack"><div class="pfill" id="pfill" style="width:0%"></div></div>
+    </div>
+  </div>
+
+  <!-- YOUTUBE -->
+  <div class="card">
+    <div class="clabel">🎥 YouTube Se Seekho</div>
+    <div class="yt-row">
+      <input class="yt-in" id="ytUrl" type="url" placeholder="YouTube link paste karo..."/>
+      <button class="yt-btn" id="ytBtn" onclick="learnYT()">SEEKHO</button>
+    </div>
+    <div class="yt-result" id="ytRes"></div>
+  </div>
+
+  <!-- PIPELINE -->
+  <div class="card">
+    <div class="clabel">Pipeline</div>
+    <div class="pipe" id="pipe">
+      <div class="pstep" id="s-learn"><span class="picon">🎓</span><span class="plbl" id="l-learn">Skill Seekhna</span></div>
+      <div class="pstep" id="s-search"><span class="picon">🔍</span><span class="plbl" id="l-search">Client Dhundhna</span></div>
+      <div class="pstep" id="s-pitch"><span class="picon">📩</span><span class="plbl" id="l-pitch">Proposal Bhejna</span></div>
+      <div class="pstep" id="s-neg"><span class="picon">🤝</span><span class="plbl" id="l-neg">Deal Close Karna</span></div>
+      <div class="pstep" id="s-work"><span class="picon">🎬</span><span class="plbl" id="l-work">Video Edit Karna</span></div>
+      <div class="pstep" id="s-sub"><span class="picon">📤</span><span class="plbl" id="l-sub">Submit Karna</span></div>
+      <div class="pstep" id="s-paid"><span class="picon">💰</span><span class="plbl" id="l-paid">Payment!</span></div>
+    </div>
+  </div>
+
+  <!-- LOGS -->
+  <div class="card">
+    <div class="clabel">Activity Log</div>
+    <div class="logbox" id="log">
+      <div class="lempty" id="lempty">Agent start karo...</div>
+    </div>
+  </div>
+
+  <!-- CONTROLS -->
+  <div class="card">
+    <div class="clabel">Controls</div>
+    <button class="api-tog" onclick="toggleApi()">▼ API KEY DAALO</button>
+    <input class="api-in" id="apiKey" type="password" placeholder="sk-ant-... (Anthropic API key)"/>
+    <button class="startbtn" id="startBtn" onclick="runAgent()">🚀 AGENT SHURU KARO</button>
+  </div>
+
+  <div class="a-paid" id="aPaid">
+    <div class="abig">🎉💰🎉</div>
+    <div class="atitle" id="aPaidT">PAYMENT AAYA!</div>
+    <div class="asub" id="aPaidS">Aapka paisa aane wala hai!</div>
+  </div>
+
+  <div class="a-shut" id="aShut">
+    <div class="abig">⚠️💀⚠️</div>
+    <div class="atitle">SHUTDOWN THREAT!</div>
+    <div class="asub">Earning zero... dobara start karo!</div>
+  </div>
+
+  <div style="height:30px"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  const STEPS = ['learn','search','pitch','neg','work','sub','paid'];
+  let running = false, earning = 0, done = [];
+
+  function toggleApi(){
+    const el = document.getElementById('apiKey');
+    el.className = el.className.includes('show') ? 'api-in' : 'api-in show';
+  }
+
+  function showToast(msg, dur=3000){
+    const t = document.getElementById('toast');
+    t.textContent = msg; t.className = 'toast show';
+    setTimeout(()=>t.className='toast', dur);
+  }
+
+  function setEmo(e, anim=''){
+    const el = document.getElementById('emo');
+    el.textContent = e;
+    el.className = 'emoji ' + anim;
+  }
+
+  function setSt(t, cls=''){
+    const el = document.getElementById('st');
+    el.textContent = t; el.className = 'astatus ' + cls;
+  }
+
+  function setTh(t){ document.getElementById('th').textContent = t; }
+
+  function setProg(p){
+    document.getElementById('pfill').style.width = p + '%';
+    document.getElementById('pfill').className = 'pfill' + (p>=100?' done':'');
+    document.getElementById('ppct').textContent = p + '%';
+  }
+
+  function setStep(active){
+    STEPS.forEach(s => {
+      const step = document.getElementById('s-'+s);
+      const lbl = document.getElementById('l-'+s);
+      step.className = 'pstep';
+      lbl.className = 'plbl';
+      const old = step.querySelector('.pdot,.ptick');
+      if(old) old.remove();
+
+      if(s === active){
+        step.className = 'pstep cur';
+        lbl.className = 'plbl act';
+        const d = document.createElement('span');
+        d.className = 'pdot'; step.appendChild(d);
+      } else if(done.includes(s)){
+        lbl.className = 'plbl dn';
+        const tk = document.createElement('span');
+        tk.className = 'ptick'; tk.textContent = '✓'; step.appendChild(tk);
+      }
+    });
+  }
+
+  function addLog(msg, type='info'){
+    const box = document.getElementById('log');
+    document.getElementById('lempty').style.display = 'none';
+    const now = new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+    const ln = document.createElement('div');
+    ln.className = 'lline';
+    ln.innerHTML = `<span class="ltime">${now}</span><span class="lmsg ${type}">${msg}</span>`;
+    box.appendChild(ln);
+    box.scrollTop = box.scrollHeight;
+  }
+
+  function sleep(ms){ return new Promise(r=>setTimeout(r,ms)); }
+
+  // Call our backend proxy instead of Anthropic directly
+  async function ask(prompt){
+    const key = document.getElementById('apiKey').value.trim();
+    if(!key) throw new Error('API key daalo pehle!');
+
+    const res = await fetch('/api/chat', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ prompt, apiKey: key })
+    });
+    const data = await res.json();
+    if(data.error) throw new Error(data.error);
+    return data.text;
+  }
+
+  async function learnYT(){
+    const url = document.getElementById('ytUrl').value.trim();
+    if(!url){ showToast('YouTube link daalo!'); return; }
+    const key = document.getElementById('apiKey').value.trim();
+    if(!key){ showToast('Pehle API key daalo!'); return; }
+
+    const btn = document.getElementById('ytBtn');
+    const res = document.getElementById('ytRes');
+    btn.disabled = true; btn.textContent = '...';
+    res.className = 'yt-result';
+
+    try {
+      const resp = await ask(
+        `Ek video editor AI agent hoon. User ne yeh YouTube link share kiya: ${url}
+        Is video se seekhe gaye editing techniques batao — color grading, cuts, transitions, audio etc.
+        Hinglish mein, 4-5 bullet points "•" se. Realistic lagao.`
+      );
+      res.textContent = '✅ Seekh liya!\n\n' + resp;
+      res.className = 'yt-result show';
+    } catch(e){
+      showToast('Error: ' + e.message);
+    }
+    btn.disabled = false; btn.textContent = 'SEEKHO';
+  }
+
+  async function runAgent(){
+    if(running) return;
+    const key = document.getElementById('apiKey').value.trim();
+    if(!key){ showToast('Pehle API key daalo! ▼ upar wale button se'); return; }
+
+    running = true; done = []; earning = 0;
+    document.getElementById('startBtn').disabled = true;
+    document.getElementById('startBtn').textContent = '⚡ KAM KAR RAHA HAI...';
+    document.getElementById('aPaid').className = 'a-paid';
+    document.getElementById('aShut').className = 'a-shut';
+    document.getElementById('earn').textContent = '$0';
+    document.getElementById('cname').textContent = '—';
+    document.getElementById('heart').textContent = '💚';
+    document.getElementById('log').innerHTML = '';
+    document.getElementById('lempty').style.display = 'block';
+    setProg(0);
+
+    try {
+      // PHASE 1 — LEARN
+      setStep('learn'); setEmo('😤',''); setSt('Skill Seekh Raha Hoon...');
+      setTh('Video editing ke secrets seekhne ka waqt!');
+      addLog('🎓 PHASE 1: Skills...','phase');
+      const skills=['Premiere Pro','Color Grading','Audio Mixing','Reels Editing','YouTube Structure','Client Revisions'];
+      for(let i=0;i<skills.length;i++){
+        addLog('📚 '+skills[i],'info');
+        setProg(Math.floor((i+1)/skills.length*20));
+        await sleep(400);
+      }
+      const r1 = await ask('Tu video editing AI agent hai. Skills seekhne ke baad excited thought bolo. Hinglish, 1-2 lines.');
+      setTh(r1); setEmo('🤩','ab'); addLog('🧠 "'+r1+'"','agent');
+      done.push('learn'); setProg(22); await sleep(600);
+
+      // PHASE 2 — SEARCH
+      setStep('search'); setEmo('🔍','');
+      setSt('Client Dhundh Raha Hoon...'); addLog('🔍 PHASE 2: Client Search...','phase');
+      for(const p of ['Fiverr','Upwork','LinkedIn','Instagram','YouTube']){
+        addLog('🌐 '+p+' scan...','info'); setProg(parseInt(document.getElementById('ppct').textContent)+3); await sleep(350);
+      }
+      const r2 = await ask('Tu video editing agent hai. Ek realistic client dhundha. Format: NAME: [naam] | BUDGET: $[50-200] | WORK: [kya chahiye]. Sirf yeh ek line.');
+      const nm = r2.match(/NAME:\s*([^|]+)/i);
+      const bm = r2.match(/\$(\d+)/);
+      const cn = nm ? nm[1].trim() : 'TechYouTuber_Ahmed';
+      const bg = bm ? parseInt(bm[1]) : 130;
+      document.getElementById('cname').textContent = cn.split('_')[0];
+      setEmo('😊',''); setSt('Client Mila! 🎯');
+      addLog('✅ Client: '+cn,'success'); addLog('💼 Budget: $'+bg,'success');
+      setTh('Yessss! '+cn+' mil gaya!');
+      done.push('search'); setProg(45); await sleep(700);
+
+      // PHASE 3 — PITCH
+      setStep('pitch'); setEmo('😬',''); setSt('Proposal Bhej Raha Hoon...');
+      addLog('📩 PHASE 3: Proposal...','phase');
+      const r3 = await ask('Tu video editor agent hai. "'+cn+'" ko $'+bg+' ke liye proposal bhej. Hinglish, 2-3 lines, professional.');
+      addLog('📩 "'+r3+'"','agent');
+      done.push('pitch'); setProg(58); await sleep(800);
+
+      // PHASE 4 — NEGOTIATE
+      setStep('neg'); setEmo('😰',''); setSt('Negotiate Kar Raha Hoon...');
+      addLog('🤝 PHASE 4: Negotiation...','phase');
+      const co = Math.floor(bg*0.8);
+      addLog('⚡ Client counter: $'+co,'info');
+      const r4 = await ask('Client ne $'+co+' offer kiya. Deal $'+bg+' pe close karo. Smart Hinglish reply, 2 lines.');
+      addLog('🤝 "'+r4+'"','agent');
+      addLog('🎯 DEAL CLOSED: $'+bg+'!','success');
+      setEmo('🥹',''); setTh('Deal close! $'+bg+' pakka!');
+      done.push('neg'); setProg(67); await sleep(700);
+
+      // PHASE 5 — WORK
+      setStep('work'); setEmo('🎬',''); setSt('Video Edit Kar Raha Hoon...');
+      addLog('🎬 PHASE 5: Editing...','phase');
+      const esteps=['Raw footage import','Timeline arrange','Color grading','Audio sync','Transitions','Captions','Final export 4K'];
+      for(let i=0;i<esteps.length;i++){
+        addLog('✂️ '+esteps[i]+'...','work');
+        setProg(67+Math.floor((i+1)/esteps.length*18));
+        await sleep(400);
+      }
+      setTh('Video fire bana hai! 🔥');
+      done.push('work'); setProg(87); await sleep(700);
+
+      // PHASE 6 — SUBMIT
+      setStep('sub'); setEmo('📤',''); setSt('Submit Kar Raha Hoon...');
+      addLog('📤 PHASE 6: Submitting...','phase');
+      const r5 = await ask('"'+cn+'" ko edited video deliver karo, $'+bg+' payment maango. Hinglish, 2 lines professional.');
+      addLog('📨 "'+r5+'"','agent');
+      done.push('sub'); setProg(95); await sleep(1000);
+
+      // PHASE 7 — PAID!
+      setStep('paid'); done.push('paid'); earning = bg; setProg(100);
+      setEmo('🎉','ab'); setSt('PAID! 🎉','g');
+      document.getElementById('earn').textContent = '$'+earning;
+      const r6 = await ask('Tu AI agent hai, $'+bg+' kamaye! Celebrate karo Hinglish mein. User ko payment receive karne ko kaho. 2 lines.');
+      setTh(r6);
+      addLog('💰 PAYMENT RECEIVED: $'+bg+'!','payment');
+      addLog('🎉 '+r6,'agent');
+      addLog('💳 AAPKO ABHI $'+bg+' RECEIVE KARNA HAI!','payment');
+      document.getElementById('aPaidT').textContent = '$'+bg+' KAMAYE! 🎉';
+      document.getElementById('aPaidS').textContent = 'Client: '+cn+' • Aapka payment ready!';
+      document.getElementById('aPaid').className = 'a-paid show';
+
+    } catch(e){
+      setEmo('💀','as'); setSt('ERROR!','r');
+      setTh('Kuch gadbad... '+e.message);
+      document.getElementById('heart').textContent = '💔';
+      addLog('❌ '+e.message,'error');
+      document.getElementById('aShut').className = 'a-shut show';
+      showToast('❌ '+e.message, 5000);
+    }
+
+    running = false;
+    document.getElementById('startBtn').disabled = false;
+    document.getElementById('startBtn').textContent = '🔄 DOBARA CHALAO';
+  }
+</script>
+</body>
+</html>
