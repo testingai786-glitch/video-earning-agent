@@ -22,7 +22,7 @@ app.post('/api/chat', async (req, res) => {
         'Authorization': `Bearer ${key}`
       },
       body: JSON.stringify({
-        model: 'google/gemini-flash-1.5-8b:free',
+        model:meta-llama/llama-3.2-3b-instruct:free
         messages: [{ role: 'user', content: prompt }]
       })
     });
