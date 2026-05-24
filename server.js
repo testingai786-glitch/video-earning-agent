@@ -12,25 +12,23 @@ app.get('/', (req, res) => {
 
 app.post('/api/chat', async (req, res) => {
   const { prompt, apiKey } = req.body;
-  const key = apiKey || process.env.ANTHROPIC_API_KEY;
-  if (!key) return res.status(400).json({ error: 'API key nahi hai!' });
+  const key = apiKey || process.env.OPENROUTER_API_KEY;
+  if (!key) return res.status(400).json({ error: 'API key daalo!' });
   try {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
+    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-api-key': key,
-        'anthropic-version': '2023-06-01'
+        'Authorization': `Bearer ${key}`
       },
       body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
-        max_tokens: 500,
+        model: 'google/gemini-2.0-flash-exp:free',
         messages: [{ role: 'user', content: prompt }]
       })
     });
     const data = await response.json();
     if (data.error) return res.status(400).json({ error: data.error.message });
-    res.json({ text: data.content?.[0]?.text || 'Response nahi aaya' });
+    res.json({ text: data.choices?.[0]?.message?.content || 'Response nahi aaya' });
   } catch(e) {
     res.status(500).json({ error: e.message });
   }
